@@ -65,17 +65,19 @@ func solve(towns []*town, N, K int) string {
 
 		t := towns[n]
 
+		npop := make(map[int]bool)
+
 		// range over neighbours
-		higher := make(map[int]bool)
-		for i := 0; i < len(t.neighbours); i++ {
-			if t.neighbours[i].population > t.population {
-				higher[t.neighbours[i].population] = true
+		for _, n := range t.neighbours {
+			if n.population > t.population {
+				npop[n.population] = true
 			}
 		}
 
-		// range over higher neighbours
-		for i := t.population + 1; i <= K; i++ {
-			if higher[i] == false {
+		// check
+		k := K - t.population
+		for i := 1; i <= k; i++ {
+			if exist := npop[t.population+i]; !exist {
 				return "ANO"
 			}
 		}
