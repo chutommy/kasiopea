@@ -42,9 +42,9 @@ func main() {
 
 		// print out result
 		if ok {
-			f.WriteString("ANO\n")
+			fmt.Fprintln(f, "ANO")
 		} else {
-			f.WriteString("NE\n")
+			fmt.Fprintln(f, "NE")
 		}
 	}
 }
