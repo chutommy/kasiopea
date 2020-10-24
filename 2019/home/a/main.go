@@ -19,34 +19,32 @@ func main() {
 	var T int
 	fmt.Scan(&T)
 
-	// range over problems
 	for t := 0; t < T; t++ {
 
 		// get N
 		var N int
 		fmt.Scan(&N)
 
-		// validate Zuzanka's interrogation
 		ok := true
 		for n := 1; n <= N; n++ {
 
 			// get a number
-			var i int
-			fmt.Scan(&i)
+			var c int
+			fmt.Scan(&c)
 
-			if ok != false {
-				if i == 0 {
-					continue
-				} else if i != n {
+			// validate
+			if ok {
+				if c != n && c != 0 {
 					ok = false
 				}
 			}
 		}
 
+		// print out result
 		if ok {
-			fmt.Fprintln(f, "ANO")
+			f.WriteString("ANO\n")
 		} else {
-			fmt.Fprintln(f, "NE")
+			f.WriteString("NE\n")
 		}
 	}
 }
