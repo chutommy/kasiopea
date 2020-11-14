@@ -45,10 +45,7 @@ func main() {
 func solve(inp []int, N int) int {
 
 	count := 0
-	dest := N - 1
-
-	for n := 0; n < dest; {
-
+	for n := 0; n < N-1; {
 		n += inp[n]
 		count++
 	}
