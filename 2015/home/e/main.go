@@ -42,61 +42,36 @@ func main() {
 
 func solve(inp []int, N int) int {
 
-	if N < 3 {
-		return 1
+	// set sides
+	if inp[0] != 0 {
+		inp[0] = 1
+	}
+	if inp[N-1] != 0 {
+		inp[N-1] = 1
 	}
 
-	// construct left and right
-	left, right := make([]int, N), make([]int, N)
-	left[0], left[N-1] = 1, 1
-	copy(right, left)
+	// range over the array from both sides
+	for n := 1; n < N-1; n++ {
+		m := N - n - 1
 
-	// create left
-	for n := 1; n < N; n++ {
+		// process n
+		if i := inp[n-1] + 1; i < inp[n] {
+			inp[n] = i
+		}
 
-		c := inp[n]
-		l := left[n-1] + 1
-
-		if c < l {
-			left[n] = c
-		} else {
-			left[n] = l
+		// process m
+		if i := inp[m+1] + 1; i < inp[m] {
+			inp[m] = i
 		}
 	}
 
-	// create right
-	for n := N - 2; n > 0; n-- {
-
-		c := inp[n]
-		r := right[n+1] + 1
-
-		if c < r {
-			right[n] = c
-		} else {
-			right[n] = r
+	// get max
+	max := 0
+	for _, v := range inp {
+		if v > max {
+			max = v
 		}
 	}
 
-	// merge left and right
-	for n := 0; n < N; n++ {
-
-		l := left[n]
-		r := right[n]
-
-		if l < r {
-			inp[n] = l
-		} else {
-			inp[n] = r
-		}
-	}
-
-	// find max
-	time := inp[0]
-	for n := 1; n < N; n++ {
-		if v := inp[n]; v > time {
-			time = v
-		}
-	}
-
-	return time
+	return max
 }

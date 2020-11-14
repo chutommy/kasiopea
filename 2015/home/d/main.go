@@ -6,9 +6,14 @@ import (
 	"os"
 )
 
+type coor struct {
+	x int
+	y int
+}
+
 func main() {
 
-	// create output file
+	// create an output file
 	f, err := os.Create("d.out")
 	if err != nil {
 		log.Fatal(err)
@@ -19,116 +24,109 @@ func main() {
 	var T int
 	fmt.Scan(&T)
 
+	// range over each problem
 	for t := 0; t < T; t++ {
 
 		// get S, V, N
-		var X, Y, N int
-		fmt.Scan(&X, &Y, &N)
+		var S, V, N int
+		fmt.Scanf("%d %d %d", &S, &V, &N)
 
-		// make grid
-		p := &paper{
-			X:    X,
-			Y:    Y,
-			grid: make([][]int, Y),
-		}
-		for y := 0; y < Y; y++ {
-			p.grid[y] = make([]int, X)
-		}
-
-		// get init points
-		q := []*coordinate{}
+		// get sources
+		srcs := make([]coor, N)
 		for n := 0; n < N; n++ {
 
 			// get coordinate
 			var x, y int
-			fmt.Scan(&x, &y)
+			fmt.Scanf("%d %d", &x, &y)
 
-			// store
-			p.grid[y][x] = 1
-			q = append(q, &coordinate{x, y})
+			// store coordinate
+			srcs[n] = coor{
+				x: x,
+				y: y,
+			}
 		}
 
 		// solve
-		s := solve(q, p)
+		s := solve(S, V, N, srcs)
 		fmt.Fprintln(f, s)
+		fmt.Printf("%d/%d done\n", t+1, T)
 	}
 }
 
-type coordinate struct {
-	x int
-	y int
-}
+func solve(S, V, N int, srcs []coor) int {
 
-type paper struct {
-	X    int
-	Y    int
-	grid [][]int
-}
-
-func solve(q []*coordinate, p *paper) int {
-
-	time, count := 0, p.X*p.Y-len(q)
-
-	for count > 0 {
-		q, count = spreadFire(q, p, count)
-		time++
+	// create a grid
+	grid := make([][]int, V)
+	for v := 0; v < V; v++ {
+		grid[v] = make([]int, S)
 	}
 
-	return time
-}
-
-func spreadFire(q []*coordinate, p *paper, count int) ([]*coordinate, int) {
-
-	// store all new fires into the newq
-	newq := []*coordinate{}
-
-	for _, coor := range q {
-
-		xmin, xmax := coor.x == 0, coor.x == p.X-1
-		ymin, ymax := coor.y == 0, coor.y == p.Y-1
-
-		// spread to all directions if possible
-		if !xmin {
-			newq, count = setFire(coor.x-1, coor.y, newq, p, count)
-		}
-		if !xmax {
-			newq, count = setFire(coor.x+1, coor.y, newq, p, count)
-		}
-		if !ymin {
-			newq, count = setFire(coor.x, coor.y-1, newq, p, count)
-		}
-		if !ymax {
-			newq, count = setFire(coor.x, coor.y+1, newq, p, count)
-		}
-		if !xmin && !ymin {
-			newq, count = setFire(coor.x-1, coor.y-1, newq, p, count)
-		}
-		if !xmin && !ymax {
-			newq, count = setFire(coor.x-1, coor.y+1, newq, p, count)
-		}
-		if !xmax && !ymin {
-			newq, count = setFire(coor.x+1, coor.y-1, newq, p, count)
-		}
-		if !xmax && !ymax {
-			newq, count = setFire(coor.x+1, coor.y+1, newq, p, count)
-		}
-
-		p.grid[coor.y][coor.x] = 2
+	// set fire sources
+	for _, c := range srcs {
+		grid[c.y][c.x] = 1
 	}
 
-	return newq, count
-}
+	// burn paper
+	count := -1
+	for len(srcs) > 0 {
+		count++
 
-func setFire(x, y int, newq []*coordinate, p *paper, count int) ([]*coordinate, int) {
+		// create a new list of sources
+		newsrcs := &[]coor{}
 
-	// if paper is ok, set it to fire
-	if p.grid[y][x] == 0 {
+		// spread fire
+		for _, c := range srcs {
 
-		p.grid[y][x] = 1
+			minx, maxx := c.x == 0, c.x == S-1
+			miny, maxy := c.y == 0, c.y == V-1
 
-		newq = append(newq, &coordinate{x, y})
-		count--
+			// set sides
+			if !minx {
+				setFire(coor{c.x - 1, c.y}, newsrcs, grid)
+			}
+			if !maxx {
+				setFire(coor{c.x + 1, c.y}, newsrcs, grid)
+			}
+			if !miny {
+				setFire(coor{c.x, c.y - 1}, newsrcs, grid)
+			}
+			if !maxy {
+				setFire(coor{c.x, c.y + 1}, newsrcs, grid)
+			}
+
+			// set diagonals
+			if !minx && !miny {
+				setFire(coor{c.x - 1, c.y - 1}, newsrcs, grid)
+			}
+			if !minx && !maxy {
+				setFire(coor{c.x - 1, c.y + 1}, newsrcs, grid)
+			}
+			if !maxx && !miny {
+				setFire(coor{c.x + 1, c.y - 1}, newsrcs, grid)
+			}
+			if !maxx && !maxy {
+				setFire(coor{c.x + 1, c.y + 1}, newsrcs, grid)
+			}
+		}
+
+		srcs = *newsrcs
 	}
 
-	return newq, count
+	return count
+}
+
+func setFire(c coor, srcs *[]coor, grid [][]int) {
+
+	// check
+	if grid[c.y][c.x] == 0 {
+
+		// set fire
+		grid[c.y][c.x] = 1
+
+		// add to the source list
+		*srcs = append(*srcs, coor{
+			x: c.x,
+			y: c.y,
+		})
+	}
 }
