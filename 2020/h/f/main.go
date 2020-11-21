@@ -55,7 +55,6 @@ func main() {
 		} else {
 			fmt.Fprintln(f, "NE")
 		}
-		fmt.Println(t)
 	}
 }
 
