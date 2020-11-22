@@ -52,12 +52,8 @@ func main() {
 		}
 
 		// solve
-		toGrid(blocks)
-		grid[1][1] = 1
-		grid[2][2] = 2
-		printGrid()
-		spread(1, 1)
-		printGrid()
+		s := solve(blocks)
+		fmt.Fprintln(f, N-s)
 	}
 }
 
@@ -87,7 +83,27 @@ func toGrid(blocks [][2]int) {
 	}
 }
 
-func unlock(r, c int) {
+func solve(blocks [][2]int) int {
+
+	// fill the grid
+	toGrid(blocks)
+
+	// range over blocks and unlock them (one by one)
+	for _, block := range blocks {
+
+		// unlock
+		if res := unlock(block[0], block[1]); res != -1 {
+			return res
+		}
+	}
+
+	//TODO remove this to increase performance
+	// just for checking invalid situation
+	// this should never panic
+	panic("WTF 997 solve")
+}
+
+func unlock(r, c int) int {
 
 	//TODO remove this to increase performance
 	// just for checking invalid situation
@@ -98,6 +114,48 @@ func unlock(r, c int) {
 	// ==========
 
 	// increase tile value
+	grid[r][c]++
+
+	// check durability
+	if grid[r][c] < 0 {
+		return -1
+	}
+
+	// first row
+	if r == 0 {
+		grid[r][c] = 2
+	} else {
+
+		// get smallest positive adjs
+		adjs := nextTo(r, c)
+		min := -1
+		for _, adj := range adjs {
+
+			// get value
+			adjVal := grid[adj[0]][adj[1]]
+
+			// compare
+			if adjVal > 0 {
+				if min == -1 || adjVal < min {
+					min = adjVal
+				}
+			}
+		}
+
+		// no valuable neighbour
+		if min == -1 {
+			return -1
+		}
+
+		// increase the value by the total durability - remove block
+		grid[r][c] = min + durGrid[r][c]
+	}
+
+	// spread from here, if finish return result
+	if res := spread(r, c); res != -1 {
+		return res
+	}
+	return -1
 }
 
 // spread spreads the tile as much as possile
@@ -126,16 +184,16 @@ func spread(r, c int) int {
 		tile := q[0]
 		q = q[1:]
 
+		// check for last row
+		if tile[0] == R-1 {
+			return currVal - 1
+		}
+
 		// get adjs
 		adjs := nextTo(tile[0], tile[1])
 
 		// range over adjs
 		for _, adj := range adjs {
-
-			// check for last row
-			if adj[0] == 0 {
-				return currVal - 1
-			}
 
 			adjVal := grid[adj[0]][adj[1]]
 
@@ -159,18 +217,17 @@ func spread(r, c int) int {
 // include blocks
 func nextTo(r, c int) [][2]int {
 
-	//TODO remove this to increase performance
-	// just for checking invalid situation
-	// this should never panic
-	if r == 0 || r == R-1 {
-		panic("WTF 758 nextTo")
-	}
-	// ==========
-
 	// init neigbour tiles list
-	adj := [][2]int{
-		{r - 1, c}, // up
-		{r + 1, c}, // down
+	var adj [][2]int
+
+	// up
+	if r != 0 {
+		adj = append(adj, [2]int{r - 1, c})
+	}
+
+	// down
+	if r != R-1 {
+		adj = append(adj, [2]int{r + 1, c})
 	}
 
 	// left
