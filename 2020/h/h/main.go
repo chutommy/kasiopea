@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 )
 
 func main() {
@@ -27,18 +28,8 @@ func main() {
 		R, C = 0, 0 // reset
 		fmt.Scanf("%d %d %d", &R, &C, &N)
 
-		// init new grids
-		grid = make([][]int, R)
-		for r := 0; r < R; r++ {
-			grid[r] = make([]int, C)
-		}
-		durGrid = make([][]int, R)
-		for r := 0; r < R; r++ {
-			durGrid[r] = make([]int, C)
-		}
-
 		// store blocks backwards
-		blocks := make([][2]int, N)
+		blocks = make([][2]int, N)
 		for n := 0; n < N; n++ {
 
 			// get r (row number), c (column number)
@@ -51,20 +42,68 @@ func main() {
 			blocks[N-n-1] = [2]int{r, c}
 		}
 
+		// init data types
+		buildGrids()
+		buildPrior()
+		initPQ()
+		initFromTop()
+
 		// solve
-		s := solve(blocks)
-		fmt.Fprintln(f, N-s)
+		s := solve(N)
+		fmt.Fprintln(f, s)
+
+		fmt.Printf("%d/%d done\n", t+1, T)
 	}
 }
 
+// -x durability
+// 0 none
+// 1 processing
+// 2 processed
 var grid [][]int
-var durGrid [][]int // durability grid
+var durGrid [][]int
+var dessGrid [][]int
+var backGrid [][]int
+var pq [][2]int
+var prior [][][]int
+var blocks [][2]int
+var R, C int
 
-// R - rwos
-var R int
+func solve(N int) int {
 
-// C - columns
-var C int
+	// do magic
+	pos := transform()
+	backtrack(pos)
+
+	// printGrid()
+	// printDurGrid()
+	// printDessGrid()
+	// printPrior()
+	// printBackGrid()
+
+	// find min
+	min := -1
+	for _, c := range backGrid[0] {
+		if c != 0 && (min == -1 || c < min) {
+			min = c
+		}
+	}
+
+	return N - min
+}
+
+func transform() int {
+
+	// until solution is found
+	for len(pq) > 0 {
+		next := deque()
+		if r := unlock(next[0], next[1]); r != -1 {
+			return r
+		}
+	}
+
+	panic("WTF solution not found")
+}
 
 func printGrid() {
 	fmt.Println("=== GRID ===")
@@ -74,108 +113,183 @@ func printGrid() {
 	fmt.Println("============")
 }
 
-func toGrid(blocks [][2]int) {
+func printDurGrid() {
+	fmt.Println("=== DURGRID ===")
+	for _, row := range durGrid {
+		fmt.Println(row)
+	}
+	fmt.Println("===============")
+}
 
-	// store blocks
+func printDessGrid() {
+	fmt.Println("=== DESSGRID ===")
+	for _, row := range dessGrid {
+		fmt.Println(row)
+	}
+	fmt.Println("===============")
+}
+
+func printBackGrid() {
+	fmt.Println("=== BACKGRID ===")
+	for _, row := range backGrid {
+		fmt.Println(row)
+	}
+	fmt.Println("===============")
+}
+
+func buildGrids() {
+
+	// create grid
+	grid = make([][]int, R)
+	for r := 0; r < R; r++ {
+		grid[r] = make([]int, C)
+	}
+
+	// create durGrid
+	durGrid = make([][]int, R)
+	for r := 0; r < R; r++ {
+		durGrid[r] = make([]int, C)
+	}
+
+	// create dessGrid
+	dessGrid = make([][]int, R)
+	for r := 0; r < R; r++ {
+		dessGrid[r] = make([]int, C)
+	}
+
+	// create backGrid
+	backGrid = make([][]int, R)
+	for r := 0; r < R; r++ {
+		backGrid[r] = make([]int, C)
+	}
+
+	// fill with the blocks
 	for _, coor := range blocks {
 		grid[coor[0]][coor[1]]--
 		durGrid[coor[0]][coor[1]]++
+		dessGrid[coor[0]][coor[1]]++
 	}
 }
 
-func solve(blocks [][2]int) int {
+func printPrior() {
+	fmt.Println("=== PRIOR ===")
+	for _, row := range prior {
+		fmt.Println(row)
+	}
+	fmt.Println("=============")
+}
 
-	// fill the grid
-	toGrid(blocks)
+func buildPrior() {
 
-	// range over blocks and unlock them (one by one)
-	for _, block := range blocks {
-
-		// unlock
-		if res := unlock(block[0], block[1]); res != -1 {
-			return res
+	// create matrice
+	prior = make([][][]int, R)
+	for r := 0; r < R; r++ {
+		prior[r] = make([][]int, C)
+		for c := 0; c < C; c++ {
+			prior[r][c] = []int{}
 		}
 	}
 
-	//TODO remove this to increase performance
-	// just for checking invalid situation
-	// this should never panic
-	panic("WTF 997 solve")
+	// add priorities
+	for p, coor := range blocks {
+		prior[coor[0]][coor[1]] = append(prior[coor[0]][coor[1]], p)
+	}
+}
+
+func initPQ() {
+
+	// create priority que
+	pq = [][2]int{}
+
+	// add first row
+	for c := 0; c < C; c++ {
+		if grid[0][c] == -1 {
+			enque([2]int{0, c})
+		}
+	}
+}
+
+func enque(coor [2]int) {
+
+	// decrease durability
+	if durGrid[coor[0]][coor[1]] == 0 {
+		return
+	}
+	durGrid[coor[0]][coor[1]]--
+
+	val := prior[coor[0]][coor[1]][0]
+
+	// find index to insert
+	pos := sort.Search(val, func(i int) bool {
+		if len(pq) <= i {
+			return true
+		}
+		this := pq[i]
+		return val < prior[this[0]][this[1]][0]
+	})
+
+	// remove from prior add to pq
+	pq = append(pq[:pos], append([][2]int{coor}, pq[pos:]...)...)
+}
+
+func deque() [2]int {
+
+	// select first and remove from prior
+	next := pq[0]
+	prior[next[0]][next[1]] = prior[next[0]][next[1]][1:]
+
+	// enque next
+	if len(prior[next[0]][next[1]]) != 0 {
+		enque(next)
+	}
+
+	pq = pq[1:]
+	return next
+}
+
+func initFromTop() int {
+
+	// range over first row
+	for c := 0; c < C; c++ {
+		if grid[0][c] == 0 {
+			if pos := spread(0, c); pos != -1 {
+				return pos
+			}
+		}
+	}
+
+	return -1
 }
 
 func unlock(r, c int) int {
 
-	//TODO remove this to increase performance
-	// just for checking invalid situation
-	// this should never panic
-	if grid[r][c] >= 0 {
-		panic("WTF 102 unlock")
-	}
-	// ==========
-
-	// increase tile value
+	// decrease durability
 	grid[r][c]++
 
-	// check durability
-	if grid[r][c] < 0 {
-		return -1
-	}
+	// if block destroyed
+	if grid[r][c] == 0 {
 
-	// first row
-	if r == 0 {
-		grid[r][c] = 2
-	} else {
-
-		// get smallest positive adjs
-		adjs := nextTo(r, c)
-		min := -1
-		for _, adj := range adjs {
-
-			// get value
-			adjVal := grid[adj[0]][adj[1]]
-
-			// compare
-			if adjVal > 0 {
-				if min == -1 || adjVal < min {
-					min = adjVal
+		// check adjs
+		if r == 0 {
+			return spread(0, c)
+		} else {
+			for _, adj := range getAdjs(r, c) {
+				if grid[adj[0]][adj[1]] == 2 {
+					return spread(adj[0], adj[1])
 				}
 			}
 		}
-
-		// no valuable neighbour
-		if min == -1 {
-			return -1
-		}
-
-		// increase the value by the total durability - remove block
-		grid[r][c] = min + durGrid[r][c]
 	}
 
-	// spread from here, if finish return result
-	if res := spread(r, c); res != -1 {
-		return res
-	}
 	return -1
 }
 
-// spread spreads the tile as much as possile
 func spread(r, c int) int {
 
 	// init que
 	q := [][2]int{
 		{r, c},
 	}
-
-	// get current value
-	currVal := grid[r][c]
-
-	//TODO remove this to increase performance
-	// just for checking invalid situation
-	// this should never panic
-	if currVal <= 0 {
-		panic("WTF 394 spread")
-	}
-	// ==========
 
 	// until que is empty
 	for len(q) > 0 {
@@ -184,28 +298,34 @@ func spread(r, c int) int {
 		tile := q[0]
 		q = q[1:]
 
+		// mark
+		grid[tile[0]][tile[1]] = 2
+
 		// check for last row
 		if tile[0] == R-1 {
-			return currVal - 1
+			return tile[1]
 		}
 
-		// get adjs
-		adjs := nextTo(tile[0], tile[1])
+		// get neighbours
+		adjs := getAdjs(tile[0], tile[1])
 
 		// range over adjs
 		for _, adj := range adjs {
 
 			adjVal := grid[adj[0]][adj[1]]
 
-			// check value
-			if adjVal != 0 && adjVal <= currVal {
+			// check status
+			if adjVal != 0 {
+				if adjVal < 0 {
+					enque(adj)
+				}
 				continue
 			}
 
 			// set
-			grid[adj[0]][adj[1]] = currVal
+			grid[adj[0]][adj[1]] = 1
 
-			// add to que
+			// add to the que
 			q = append(q, adj)
 		}
 	}
@@ -213,9 +333,52 @@ func spread(r, c int) int {
 	return -1
 }
 
-// nextTo returns neighbour tiles
+func backtrack(pos int) {
+
+	// init que
+	q := [][2]int{
+		{R - 1, pos},
+	}
+
+	// base value for grid's starting point
+	backGrid[R-1][pos] = dessGrid[0][pos]
+
+	// until que is empty
+	for len(q) > 0 {
+
+		// deque
+		tile := q[0]
+		q = q[1:]
+
+		currVal := backGrid[tile[0]][tile[1]]
+
+		// get neighbours
+		adjs := getAdjs(tile[0], tile[1])
+
+		// range over adjs
+		for _, adj := range adjs {
+
+			adjVal := grid[adj[0]][adj[1]]
+
+			// check status
+			if adjVal != 2 {
+				continue
+			}
+
+			// set
+			bv := backGrid[adj[0]][adj[1]]
+			sv := dessGrid[adj[0]][adj[1]] + currVal
+			if bv == 0 || bv > sv {
+				backGrid[adj[0]][adj[1]] = sv
+				q = append(q, adj)
+			}
+		}
+	}
+}
+
+// getAdjs returns neighbour tiles
 // include blocks
-func nextTo(r, c int) [][2]int {
+func getAdjs(r, c int) [][2]int {
 
 	// init neigbour tiles list
 	var adj [][2]int
