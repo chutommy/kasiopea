@@ -1,11 +1,44 @@
 package main
 
 import (
+	"container/heap"
 	"fmt"
 	"log"
 	"os"
-	"sort"
 )
+
+type coor [2]int
+
+type priorityQueue []block
+
+// Len is the number of elements in the collection.
+func (p *priorityQueue) Len() int {
+	return len(*p)
+}
+
+// Less reports whether the element with
+// index i should sort before the element with index j.
+func (p *priorityQueue) Less(i int, j int) bool {
+	return (*p)[i][2] < (*p)[j][2]
+}
+
+// Swap swaps the elements with indexes i and j.
+func (p *priorityQueue) Swap(i int, j int) {
+	(*p)[i], (*p)[j] = (*p)[j], (*p)[i]
+}
+
+func (p *priorityQueue) Push(x interface{}) {
+	*p = append(*p, x.(block))
+}
+
+func (p *priorityQueue) Pop() interface{} {
+	lm := len(*p) - 1
+	this := (*p)[lm]
+	*p = (*p)[:lm]
+	return this
+}
+
+type block [3]int
 
 func main() {
 
@@ -27,82 +60,73 @@ func main() {
 		var N int
 		R, C = 0, 0 // reset
 		fmt.Scanf("%d %d %d", &R, &C, &N)
+		R++
 
 		// store blocks backwards
-		blocks = make([][2]int, N)
+		blocks = make([]block, N)
 		for n := 0; n < N; n++ {
 
 			// get r (row number), c (column number)
 			var r, c int
 			fmt.Scanf("%d %d", &r, &c)
-			r--
+			// r--
 			c--
 
 			// store
-			blocks[N-n-1] = [2]int{r, c}
+			blocks[N-n-1] = [3]int{r, c, N - n}
 		}
-
-		// init data types
-		buildGrids()
-		buildPrior()
-		initPQ()
-		initFromTop()
 
 		// solve
-		s := solve(N)
-		fmt.Fprintln(f, s)
+		fmt.Fprintln(f, N-solve())
 
-		fmt.Printf("%d/%d done\n", t+1, T)
+		// printGrid()
+		// printDurGrid()
+		// printVisited()
+		// printBlockGrid()
+
+		// fmt.Printf("%d/%d done\n", t+1, T)
 	}
 }
 
-// -x durability
-// 0 none
-// 1 processing
-// 2 processed
 var grid [][]int
 var durGrid [][]int
-var dessGrid [][]int
-var backGrid [][]int
-var pq [][2]int
-var prior [][][]int
-var blocks [][2]int
-var R, C int
+var blockGrid [][][]block
+var firstHitGrid [][]int
+var visited [][]bool
+var blocks []block
 
-func solve(N int) int {
+var pq *priorityQueue
 
-	// do magic
-	pos := transform()
-	backtrack(pos)
+// R rows
+var R int
 
-	// printGrid()
-	// printDurGrid()
-	// printDessGrid()
-	// printPrior()
-	// printBackGrid()
+// C columns
+var C int
 
-	// find min
-	min := -1
-	for _, c := range backGrid[0] {
-		if c != 0 && (min == -1 || c < min) {
-			min = c
+func solve() int {
+
+	// build structures
+	buildGrid()
+	buildDurGrid()
+	buildBlockGrid()
+	buildVisited()
+	// reset priorityQueue
+	pq = &priorityQueue{}
+
+	// init first row and set pq
+	if r := bfs(1, coor{0, 0}); r != -1 {
+		return 0
+	}
+
+	// query pq
+	for len(*pq) > 0 {
+		c := dequeue()
+		if r := unlock(c); r != -1 {
+			return r - 1
 		}
 	}
 
-	return N - min
-}
-
-func transform() int {
-
-	// until solution is found
-	for len(pq) > 0 {
-		next := deque()
-		if r := unlock(next[0], next[1]); r != -1 {
-			return r
-		}
-	}
-
-	panic("WTF solution not found")
+	panic("solution not found")
 }
 
 func printGrid() {
@@ -113,31 +137,7 @@ func printGrid() {
 	fmt.Println("============")
 }
 
-func printDurGrid() {
-	fmt.Println("=== DURGRID ===")
-	for _, row := range durGrid {
-		fmt.Println(row)
-	}
-	fmt.Println("===============")
-}
-
-func printDessGrid() {
-	fmt.Println("=== DESSGRID ===")
-	for _, row := range dessGrid {
-		fmt.Println(row)
-	}
-	fmt.Println("===============")
-}
-
-func printBackGrid() {
-	fmt.Println("=== BACKGRID ===")
-	for _, row := range backGrid {
-		fmt.Println(row)
-	}
-	fmt.Println("===============")
-}
-
-func buildGrids() {
+func buildGrid() {
 
 	// create grid
 	grid = make([][]int, R)
@@ -145,235 +145,164 @@ func buildGrids() {
 		grid[r] = make([]int, C)
 	}
 
-	// create durGrid
+	// fill with blocks
+	for _, c := range blocks {
+		grid[c[0]][c[1]]--
+	}
+}
+
+func printDurGrid() {
+	fmt.Println("=== DURGRID ===")
+	for _, row := range durGrid {
+		fmt.Println(row)
+	}
+	fmt.Println("============")
+}
+
+func buildDurGrid() {
+
+	// create grid
 	durGrid = make([][]int, R)
 	for r := 0; r < R; r++ {
 		durGrid[r] = make([]int, C)
 	}
 
-	// create dessGrid
-	dessGrid = make([][]int, R)
-	for r := 0; r < R; r++ {
-		dessGrid[r] = make([]int, C)
-	}
-
-	// create backGrid
-	backGrid = make([][]int, R)
-	for r := 0; r < R; r++ {
-		backGrid[r] = make([]int, C)
-	}
-
-	// fill with the blocks
-	for _, coor := range blocks {
-		grid[coor[0]][coor[1]]--
-		durGrid[coor[0]][coor[1]]++
-		dessGrid[coor[0]][coor[1]]++
+	// fill with blocks
+	for _, c := range blocks {
+		durGrid[c[0]][c[1]]++
 	}
 }
 
-func printPrior() {
-	fmt.Println("=== PRIOR ===")
-	for _, row := range prior {
+func printBlockGrid() {
+	fmt.Println("=== BLOCKGRID ===")
+	for _, row := range blockGrid {
 		fmt.Println(row)
 	}
-	fmt.Println("=============")
+	fmt.Println("================")
 }
 
-func buildPrior() {
+func buildBlockGrid() {
 
-	// create matrice
-	prior = make([][][]int, R)
+	// create grid
+	blockGrid = make([][][]block, R)
 	for r := 0; r < R; r++ {
-		prior[r] = make([][]int, C)
-		for c := 0; c < C; c++ {
-			prior[r][c] = []int{}
+		blockGrid[r] = make([][]block, C)
+	}
+
+	// fill with blocks
+	for _, c := range blocks {
+		blockGrid[c[0]][c[1]] = append(blockGrid[c[0]][c[1]], c)
+	}
+}
+
+func printVisited() {
+	fmt.Println("=== VISITED ===")
+	for _, row := range visited {
+		fmt.Println(row)
+	}
+	fmt.Println("==========---==")
+}
+
+func buildVisited() {
+
+	// create grid
+	visited = make([][]bool, R)
+	for r := 0; r < R; r++ {
+		visited[r] = make([]bool, C)
+	}
+}
+
+func unlock(c coor) int {
+
+	if len(blockGrid[c[0]][c[1]]) != 0 {
+		return -1
+	}
+
+	// select smallest around
+	min := -1
+	for _, adj := range getAdjs(c[0], c[1]) {
+		v := grid[adj[0]][adj[1]]
+		if v > 0 && (min == -1 || v < min) {
+			min = v
 		}
 	}
 
-	// add priorities
-	for p, coor := range blocks {
-		prior[coor[0]][coor[1]] = append(prior[coor[0]][coor[1]], p)
-	}
+	// bfs with the smallest adj + durability
+	return bfs(min+durGrid[c[0]][c[1]], c)
 }
 
-func initPQ() {
+func enqueue(c coor) {
 
-	// create priority que
-	pq = [][2]int{}
+	// remove from blockGrid
+	// this := blockGrid[c[0]][c[1]][0]
+	// blockGrid[c[0]][c[1]] = blockGrid[c[0]][c[1]][1:]
 
-	// add first row
-	for c := 0; c < C; c++ {
-		if grid[0][c] == -1 {
-			enque([2]int{0, c})
-		}
+	// enque into the pq
+	// heap.Push(pq, this)
+
+	for _, this := range blockGrid[c[0]][c[1]] {
+		heap.Push(pq, this)
 	}
+	blockGrid[c[0]][c[1]] = []block{}
+
+	// enque into the pq
 }
 
-func enque(coor [2]int) {
+func dequeue() coor {
 
-	// decrease durability
-	if durGrid[coor[0]][coor[1]] == 0 {
-		return
-	}
-	durGrid[coor[0]][coor[1]]--
-
-	val := prior[coor[0]][coor[1]][0]
-
-	// find index to insert
-	pos := sort.Search(val, func(i int) bool {
-		if len(pq) <= i {
-			return true
-		}
-		this := pq[i]
-		return val < prior[this[0]][this[1]][0]
-	})
-
-	// remove from prior add to pq
-	pq = append(pq[:pos], append([][2]int{coor}, pq[pos:]...)...)
+	// get smallest block
+	b := heap.Pop(pq).(block)
+	return coor{b[0], b[1]}
 }
 
-func deque() [2]int {
+func bfs(v int, sc coor) int {
 
-	// select first and remove from prior
-	next := pq[0]
-	prior[next[0]][next[1]] = prior[next[0]][next[1]][1:]
+	// init queue
+	q := []coor{sc}
 
-	// enque next
-	if len(prior[next[0]][next[1]]) != 0 {
-		enque(next)
-	}
+	// mark as visited
+	visited[sc[0]][sc[1]] = true
 
-	pq = pq[1:]
-	return next
-}
-
-func initFromTop() int {
-
-	// range over first row
-	for c := 0; c < C; c++ {
-		if grid[0][c] == 0 {
-			if pos := spread(0, c); pos != -1 {
-				return pos
-			}
-		}
-	}
-
-	return -1
-}
-
-func unlock(r, c int) int {
-
-	// decrease durability
-	grid[r][c]++
-
-	// if block destroyed
-	if grid[r][c] == 0 {
-
-		// check adjs
-		if r == 0 {
-			return spread(0, c)
-		} else {
-			for _, adj := range getAdjs(r, c) {
-				if grid[adj[0]][adj[1]] == 2 {
-					return spread(adj[0], adj[1])
-				}
-			}
-		}
-	}
-
-	return -1
-}
-
-func spread(r, c int) int {
-
-	// init que
-	q := [][2]int{
-		{r, c},
-	}
-
-	// until que is empty
 	for len(q) > 0 {
 
-		// deque
-		tile := q[0]
+		// dequeue
+		c := q[0]
 		q = q[1:]
 
-		// mark
-		grid[tile[0]][tile[1]] = 2
+		// v == 0 (true)
+		// mark with value
+		grid[c[0]][c[1]] = v
 
 		// check for last row
-		if tile[0] == R-1 {
-			return tile[1]
+		if c[0] == R-1 {
+			return v
 		}
 
-		// get neighbours
-		adjs := getAdjs(tile[0], tile[1])
+		// enqueue adj
+		for _, adj := range getAdjs(c[0], c[1]) {
 
-		// range over adjs
-		for _, adj := range adjs {
+			// check value
+			val := grid[adj[0]][adj[1]]
+			if val < 0 {
 
-			adjVal := grid[adj[0]][adj[1]]
-
-			// check status
-			if adjVal != 0 {
-				if adjVal < 0 {
-					enque(adj)
+				// if has more durability
+				if len(blockGrid[adj[0]][adj[1]]) != 0 {
+					enqueue(adj)
 				}
 				continue
-			}
 
-			// set
-			grid[adj[0]][adj[1]] = 1
-
-			// add to the que
-			q = append(q, adj)
-		}
-	}
-
-	return -1
-}
-
-func backtrack(pos int) {
-
-	// init que
-	q := [][2]int{
-		{R - 1, pos},
-	}
-
-	// base value for grid's starting point
-	backGrid[R-1][pos] = dessGrid[0][pos]
-
-	// until que is empty
-	for len(q) > 0 {
-
-		// deque
-		tile := q[0]
-		q = q[1:]
-
-		currVal := backGrid[tile[0]][tile[1]]
-
-		// get neighbours
-		adjs := getAdjs(tile[0], tile[1])
-
-		// range over adjs
-		for _, adj := range adjs {
-
-			adjVal := grid[adj[0]][adj[1]]
-
-			// check status
-			if adjVal != 2 {
+			} else if val != 0 || visited[adj[0]][adj[1]] {
 				continue
 			}
 
-			// set
-			bv := backGrid[adj[0]][adj[1]]
-			sv := dessGrid[adj[0]][adj[1]] + currVal
-			if bv == 0 || bv > sv {
-				backGrid[adj[0]][adj[1]] = sv
-				q = append(q, adj)
-			}
+			// append and mark as visited
+			q = append(q, adj)
+			visited[adj[0]][adj[1]] = true
 		}
 	}
+
+	// bfs not ended at last row
+	return -1
 }
 
 // getAdjs returns neighbour tiles
