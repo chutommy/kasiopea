@@ -30,11 +30,7 @@ func main() {
 		// get distances
 		dists := make([]int, N)
 		for n := 0; n < N; n++ {
-
-			// store distance
-			var d int
-			fmt.Scan(&d)
-			dists[n] = d
+			fmt.Scan(&dists[n])
 		}
 
 		// solve

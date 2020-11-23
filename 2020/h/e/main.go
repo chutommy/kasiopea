@@ -29,11 +29,7 @@ func main() {
 		// store lengths
 		lengths := make([]int, N)
 		for n := 0; n < N; n++ {
-
-			// store int
-			var i int
-			fmt.Scan(&i)
-			lengths[n] = i
+			fmt.Scan(&lengths[n])
 		}
 
 		// solve

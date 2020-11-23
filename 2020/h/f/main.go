@@ -19,7 +19,7 @@ func main() {
 	var T int
 	fmt.Scan(&T)
 
-	// range over each problem
+	// range over problems
 	for t := 0; t < T; t++ {
 
 		// get N

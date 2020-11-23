@@ -29,10 +29,7 @@ func main() {
 		// store temperatures
 		temps := make([]int, N)
 		for n := 0; n < N; n++ {
-			// store integer
-			var i int
-			fmt.Scan(&i)
-			temps[n] = i
+			fmt.Scan(&temps[n])
 		}
 
 		// solve
