@@ -19,7 +19,7 @@ func main() {
 	var T int
 	fmt.Scan(&T)
 
-	// range over each problem
+	// range over problems
 	for t := 0; t < T; t++ {
 
 		// get N
@@ -30,7 +30,7 @@ func main() {
 		lengths := make([]int, N)
 		for n := 0; n < N; n++ {
 
-			// get int
+			// store int
 			var i int
 			fmt.Scan(&i)
 			lengths[n] = i
@@ -71,7 +71,6 @@ func solve(N int, lx []int) int {
 	a, b := best[N-1], best[N-2]
 	if a < b {
 		return a
-	} else {
-		return b
 	}
+	return b
 }

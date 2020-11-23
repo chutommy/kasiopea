@@ -62,9 +62,7 @@ func solve(N int, adj []int) bool {
 
 	// init status arrays
 	visited := make([]bool, N)
-	// visitedCopy := make([]bool, N)
 	rooted := make([]int, N)
-	// rootedCopy := make([]int, N)
 
 	// dfs
 	for root, next := range adj {
@@ -74,12 +72,8 @@ func solve(N int, adj []int) bool {
 			continue
 		}
 
-		visited[root] = true
-		// copy(visitedCopy, visited)
-
 		rooted[root] = root
-		// copy(rootedCopy, rooted)
-
+		visited[root] = true
 		cycle := false
 		dropped := false
 
@@ -93,13 +87,14 @@ func solve(N int, adj []int) bool {
 
 			// check if visited
 			if visited[next] {
-
 				// check cycle
 				if rooted[next] == root {
 					cycle = true
 				}
 				break
 			}
+
+			// mark
 			visited[next] = true
 			rooted[next] = root
 
@@ -107,12 +102,9 @@ func solve(N int, adj []int) bool {
 			nextAdj := adj[next]
 			if nextAdj < next {
 				if dropped {
-					// copy(visited, visitedCopy)
-					// copy(rooted, rootedCopy)
 					break
-				} else {
-					dropped = true
 				}
+				dropped = true
 			}
 			next = nextAdj
 		}
