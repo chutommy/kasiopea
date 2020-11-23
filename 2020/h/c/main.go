@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	// create output file
+	// create an output file
 	f, err := os.Create("c.out")
 	if err != nil {
 		log.Fatal(err)
@@ -31,7 +31,7 @@ func main() {
 		dists := make([]int, N)
 		for n := 0; n < N; n++ {
 
-			// get distances
+			// store distance
 			var d int
 			fmt.Scan(&d)
 			dists[n] = d

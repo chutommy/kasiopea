@@ -19,35 +19,36 @@ func main() {
 	var T int
 	fmt.Scan(&T)
 
-	// range over each problem
+	// range over problems
 	for t := 0; t < T; t++ {
 
 		// get N
 		var N int
 		fmt.Scan(&N)
 
-		// store problem
-		arr := make([]int, N)
+		// store temperatures
+		temps := make([]int, N)
 		for n := 0; n < N; n++ {
-
-			// get integer
+			// store integer
 			var i int
 			fmt.Scan(&i)
-			arr[n] = i
+			temps[n] = i
 		}
 
 		// solve
-		s := solve(N, arr)
+		s := solve(N, temps)
 		fmt.Fprintln(f, s)
 	}
 }
 
-func solve(N int, arr []int) int {
-	min := top(arr[:3])
+func solve(N int, temps []int) int {
 
+	// set to the first value
+	min := top(temps[:3])
+
+	// range over temperatures
 	for i := 1; i < N-2; i++ {
-		v := top(arr[i : i+3])
-		if v < min {
+		if v := top(temps[i : i+3]); v < min {
 			min = v
 		}
 	}
