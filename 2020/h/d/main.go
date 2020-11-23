@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	// create output file
+	// create an output file
 	f, err := os.Create("d.out")
 	if err != nil {
 		log.Fatal(err)
@@ -19,7 +19,7 @@ func main() {
 	var T int
 	fmt.Scan(&T)
 
-	// range over each problem
+	// range over problems
 	for t := 0; t < T; t++ {
 
 		// get N, M
@@ -29,7 +29,7 @@ func main() {
 		// init DT
 		stats = make([]int, N)
 		visited = make([]bool, N)
-		friends := make(map[int][]int)
+		friends := make([][]int, N)
 		for n := 0; n < N; n++ {
 			friends[n] = []int{}
 		}
@@ -62,8 +62,7 @@ func main() {
 			}
 
 			// print solution
-			l := len(ones)
-			fmt.Fprintln(f, l)
+			fmt.Fprintln(f, len(ones))
 			for _, v := range ones {
 				fmt.Fprintln(f, v)
 			}
@@ -80,7 +79,7 @@ func main() {
 var stats []int
 var visited []bool
 
-func solve(N, M int, friends map[int][]int) bool {
+func solve(N, M int, friends [][]int) bool {
 
 	// check - everybody has at least one friend
 	for n := 0; n < N; n++ {
@@ -102,39 +101,38 @@ func solve(N, M int, friends map[int][]int) bool {
 	return true
 }
 
-func bfs(N, i int, friends map[int][]int) {
+func bfs(N, i int, friends [][]int) {
 
 	// init que
 	q := []int{i}
 	visited[i] = true
 
-	prev := make([]int, N)
+	stats[i] = 1
 
 	// until que is empty
 	for len(q) > 0 {
 
 		// deque
-		curr := q[0]
+		this := q[0]
 		q = q[1:]
 
-		// stats manipulation
-		toSet := 0
-		if stats[prev[curr]] == 1 {
-			toSet = 2
-		} else {
-			toSet = 1
-		}
-		stats[curr] = toSet
+		// get curr status
+		toSet := change(stats[this])
 
 		// range over neighbours
-		for _, next := range friends[curr] {
+		for _, next := range friends[this] {
 			if !visited[next] {
 				q = append(q, next)
+				stats[next] = toSet
 				visited[next] = true
-
-				// set previous
-				prev[next] = curr
 			}
 		}
 	}
+}
+
+func change(i int) int {
+	if i == 1 {
+		return 2
+	}
+	return 1
 }
