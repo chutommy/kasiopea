@@ -7,14 +7,6 @@ import (
 	"os"
 )
 
-// L - left
-// R - right
-// U - up
-// D - down
-var gridA [][]string
-var gridB [][]string
-var actions [][]int
-
 func main() {
 
 	// create an output file
@@ -43,53 +35,40 @@ func main() {
 			gridB[n] = make([]string, M)
 		}
 
-		// init actions
+		// reset actions
 		actions = [][]int{}
 
 		// get grid A
 		for n := 0; n < N; n++ {
 			for m := 0; m < M; m++ {
-				// store piece
-				var p string
-				fmt.Scanf("%1s", &p)
-				gridA[n][m] = p
+				fmt.Scanf("%1s", &gridA[n][m])
 			}
 			fmt.Scanf("%1s")
 		}
-
 		fmt.Scanf("%1s")
 
 		// get grid B
 		for n := 0; n < N; n++ {
 			for m := 0; m < M; m++ {
-				// store piece
-				var p string
-				fmt.Scanf("%1s", &p)
-				gridB[n][m] = p
+				fmt.Scanf("%1s", &gridB[n][m])
 			}
 			fmt.Scanf("%1s")
 		}
-
 		fmt.Scanf("%1s")
 
 		// solve
 		solve(N, M)
 		printSolution(f)
-		fmt.Printf("%d/%d done\n", t+1, T)
 	}
 }
 
-func printGrid() {
-	for _, row := range gridA {
-		fmt.Println(row)
-	}
-}
-
-func printActions() {
-	for _, action := range actions {
-		fmt.Println(action)
-	}
-}
+// L - left
+// R - right
+// U - up
+// D - down
+var gridA [][]string
+var gridB [][]string
+var actions [][]int
 
 func printSolution(f io.Writer) {
 	fmt.Fprintln(f, len(actions))
@@ -110,12 +89,6 @@ func solve(N, M int) {
 			if gridA[n][m] != gridB[n][m] {
 				mustRotate(n, m)
 			}
-
-			//TODO remove this code
-			if gridA[n][m] != gridB[n][m] {
-				panic("WTF 00")
-			}
-			// to check invalid situation
 		}
 	}
 }
@@ -135,7 +108,6 @@ func mustRotate(y, x int) {
 
 	// check if rotable
 	for !canRotate(y, x) {
-
 		if curr == "L" {
 			// LR
 			// ?? case
@@ -148,28 +120,22 @@ func mustRotate(y, x int) {
 		}
 	}
 
-	//TODO remove this code
-	if !canRotate(y, x) {
-		panic("WTF 01")
-	}
-	// to check invalid situation
-
 	// rotate
 	rotate(y, x)
 }
 
 func canRotate(y, x int) bool {
 
-	// L case
+	// LR
+	// LR case
 	if gridA[y][x] == "L" && gridA[y+1][x] == "L" {
 		return true
-
 	}
 
-	// U case
+	// UU
+	// DD case
 	if gridA[y][x] == "U" && gridA[y][x+1] == "U" {
 		return true
-
 	}
 
 	// invalid
@@ -181,37 +147,22 @@ func rotate(y, x int) {
 	// log the action
 	actions = append(actions, []int{y + 1, x + 1})
 
-	curr := gridA[y][x]
-
-	// LR
-	// LR case
-	if curr == "L" {
-
-		//TODO remove this code
-		if gridA[y][x+1] != "R" || gridA[y+1][x] != "L" {
-			panic("WTF 02")
-		}
-		// to check invalid situation
+	if curr := gridA[y][x]; curr == "L" {
+		// LR
+		// LR case
 
 		gridA[y][x] = "U"
 		gridA[y][x+1] = "U"
 		gridA[y+1][x] = "D"
 		gridA[y+1][x+1] = "D"
 
+	} else {
 		// UU
 		// DD case
-	} else {
-
-		//TODO remove this code
-		if gridA[y+1][x] != "D" || gridA[y][x+1] != "U" {
-			panic("WTF 03")
-		}
-		// to check invalid situation
 
 		gridA[y][x] = "L"
 		gridA[y][x+1] = "R"
 		gridA[y+1][x] = "L"
 		gridA[y+1][x+1] = "R"
-
 	}
 }
