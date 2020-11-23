@@ -84,6 +84,7 @@ func main() {
 		// printVisited()
 		// printBlockGrid()
 
+		// print status
 		fmt.Printf("%d/%d done\n", t+1, T)
 	}
 }

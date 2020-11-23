@@ -59,6 +59,9 @@ func main() {
 		// solve
 		solve(N, M)
 		printSolution(f)
+
+		// print status
+		fmt.Printf("%d/%d done\n", t+1, T)
 	}
 }
 

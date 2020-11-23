@@ -35,6 +35,9 @@ func main() {
 		// solve
 		s := solve(N, lengths)
 		fmt.Fprintln(f, s)
+
+		// print status
+		fmt.Printf("%d/%d done\n", t+1, T)
 	}
 }
 

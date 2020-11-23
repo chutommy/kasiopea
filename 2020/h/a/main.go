@@ -32,5 +32,8 @@ func main() {
 		} else {
 			fmt.Fprintln(f, "NE REKLAMU")
 		}
+
+		// print status
+		fmt.Printf("%d/%d done\n", t+1, T)
 	}
 }
