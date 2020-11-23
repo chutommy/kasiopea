@@ -109,6 +109,7 @@ func solve() int {
 	buildGrid()
 	buildDurGrid()
 	buildBlockGrid()
+	buildFirstHitGrid()
 	buildVisited()
 	// reset priorityQueue
 	pq = &priorityQueue{}
@@ -195,6 +196,23 @@ func buildBlockGrid() {
 	}
 }
 
+func printFirstHitGrid() {
+	fmt.Println("=== FIRSTHITGRID ===")
+	for _, row := range firstHitGrid {
+		fmt.Println(row)
+	}
+	fmt.Println("====================")
+}
+
+func buildFirstHitGrid() {
+
+	// create grid
+	firstHitGrid = make([][]int, R)
+	for r := 0; r < R; r++ {
+		firstHitGrid[r] = make([]int, C)
+	}
+}
+
 func printVisited() {
 	fmt.Println("=== VISITED ===")
 	for _, row := range visited {
@@ -215,43 +233,44 @@ func buildVisited() {
 func unlock(c coor) int {
 
 	if len(blockGrid[c[0]][c[1]]) != 0 {
+		// if tile is not destroyed enque the block under it
+		enqueue(c)
 		return -1
 	}
 
 	// select smallest around
-	min := -1
-	for _, adj := range getAdjs(c[0], c[1]) {
-		v := grid[adj[0]][adj[1]]
-		if v > 0 && (min == -1 || v < min) {
-			min = v
-		}
-	}
+	// min := -1
+	// for _, adj := range getAdjs(c[0], c[1]) {
+	//     v := grid[adj[0]][adj[1]]
+	//     if v > 0 && (min == -1 || v < min) {
+	//         min = v
+	//     }
+	// }
 
 	// bfs with the smallest adj + durability
-	return bfs(min+durGrid[c[0]][c[1]], c)
+	return bfs(firstHitGrid[c[0]][c[1]]+durGrid[c[0]][c[1]], c)
 }
 
 func enqueue(c coor) {
 
 	// remove from blockGrid
-	// this := blockGrid[c[0]][c[1]][0]
-	// blockGrid[c[0]][c[1]] = blockGrid[c[0]][c[1]][1:]
+	this := blockGrid[c[0]][c[1]][0]
+	blockGrid[c[0]][c[1]] = blockGrid[c[0]][c[1]][1:]
 
 	// enque into the pq
-	// heap.Push(pq, this)
+	heap.Push(pq, this)
 
-	for _, this := range blockGrid[c[0]][c[1]] {
-		heap.Push(pq, this)
-	}
-	blockGrid[c[0]][c[1]] = []block{}
-
-	// enque into the pq
+	// for _, this := range blockGrid[c[0]][c[1]] {
+	//     heap.Push(pq, this)
+	// }
+	// blockGrid[c[0]][c[1]] = []block{}
 }
 
 func dequeue() coor {
 
 	// get smallest block
 	b := heap.Pop(pq).(block)
+
 	return coor{b[0], b[1]}
 }
 
@@ -287,6 +306,7 @@ func bfs(v int, sc coor) int {
 
 				// if has more durability
 				if len(blockGrid[adj[0]][adj[1]]) != 0 {
+					firstHitGrid[adj[0]][adj[1]] = v
 					enqueue(adj)
 				}
 				continue
