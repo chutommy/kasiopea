@@ -8,84 +8,106 @@ import (
 
 func main() {
 
-	// create a file
+	// create an output file
 	f, err := os.Create("c.out")
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer f.Close()
 
 	// get T
 	var T int
 	fmt.Scan(&T)
 
+	// iterate over problems
 	for t := 0; t < T; t++ {
 
-		// get N
+		// get K
+		var K int
+		fmt.Scan(&K)
+
+		// get N row
 		var N int
 		fmt.Scan(&N)
 
-		// get first row
-		var l1 int
-		fmt.Scan(&l1)
-		fr := make([]byte, l1)
-		for i := 0; i < l1; i++ {
-			var ch byte
-			fmt.Scanf("%c", &ch)
-			fr[i] = ch
+		// store first row
+		fRow := make([]byte, N)
+		for n := 0; n < N; n++ {
+			fmt.Scanf("%c", &fRow[n])
+		}
+		fmt.Scanf("\n")
+
+		// store rows
+		rows := make([][]byte, K)
+		for k := 0; k < K; k++ {
+
+			// get Ni
+			var Ni int
+			fmt.Scan(&Ni)
+
+			// store
+			row := make([]byte, Ni)
+			for ni := 0; ni < Ni; ni++ {
+				fmt.Scanf("%c", &row[ni])
+			}
+			fmt.Scanf("\n")
+
+			rows[k] = row
 		}
 
-		solution := solve(fr, N)
-		fmt.Fprintln(f, solution)
-		fmt.Printf("%d/%d\n", t+1, T)
+		// solve
+		s := solve(fRow, rows)
+		fmt.Fprintln(f, s)
 	}
 }
 
-func solve(fr []byte, N int) int {
+func solve(fRow []byte, rows [][]byte) int {
+	ll := len(fRow)
+	lr := len(rows)
 
-	min := -1
+	// init final lengths array
+	final := make([]int, lr)
 
-	for n := 0; n < N; n++ {
+	// init first queue
+	fq := []byte{}
+	for i := 0; i < ll; i++ {
+		lastInd := len(fq) - 1
 
-		// get lenght
-		var L int
-		fmt.Scan(&L)
+		// check for same values
+		if lastInd != -1 && fq[lastInd] == fRow[i] {
+			fq = fq[:lastInd]
+		} else {
+			fq = append(fq, fRow[i])
+		}
+	}
 
-		q := []byte{}
+	// iterate over rows
+	for ind, row := range rows {
 
-		// range over the queue (fr)
-		for l := 0; l < len(fr); l++ {
+		// init queue
+		q := make([]byte, len(fq))
+		copy(q, fq)
 
-			q = append(q, fr[l])
-			lq := len(q)
+		// iterate over the row and simulate
+		for _, b := range row {
+			lastInd := len(q) - 1
 
-			if lq > 1 {
-				if q[lq-1] == q[lq-2] {
-					q = q[:lq-2]
-				}
+			// check for same values
+			if lastInd != -1 && q[lastInd] == b {
+				q = q[:lastInd]
+			} else {
+				q = append(q, b)
 			}
 		}
 
-		// range over the queue
-		for l := 0; l < L; l++ {
+		// store final length
+		final[ind] = len(q)
+	}
 
-			// get char
-			var ch byte
-			fmt.Scanf("%c", &ch)
-
-			q = append(q, ch)
-			lq := len(q)
-
-			if lq > 1 {
-				if q[lq-1] == q[lq-2] {
-					q = q[:lq-2]
-				}
-			}
-		}
-
-		lq := len(q)
-		if lq < min || min == -1 {
-			min = lq
+	// get minimum from final slice
+	min := final[0]
+	for i := 1; i < lr; i++ {
+		if v := final[i]; v < min {
+			min = v
 		}
 	}
 
