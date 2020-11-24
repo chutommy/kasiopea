@@ -95,11 +95,7 @@ var C int
 func solve() int {
 
 	// build structures
-	buildGrid()
-	buildDurGrid()
-	buildBlockGrid()
-	buildFirstHitGrid()
-	buildVisited()
+	buildGrids()
 
 	// reset priorityQueue
 	pq = &priorityQueue{}
@@ -120,63 +116,29 @@ func solve() int {
 	panic("solution not found")
 }
 
-func buildGrid() {
+func buildGrids() {
 
-	// create grid
+	// make grids
 	grid = make([][]int, R)
+	durGrid = make([][]int, R)
+	blockGrid = make([][][]block, R)
+	firstHitGrid = make([][]int, R)
+	visited = make([][]bool, R)
+
+	// make subgrids
 	for r := 0; r < R; r++ {
 		grid[r] = make([]int, C)
+		durGrid[r] = make([]int, C)
+		blockGrid[r] = make([][]block, C)
+		firstHitGrid[r] = make([]int, C)
+		visited[r] = make([]bool, C)
 	}
 
 	// fill with blocks
 	for _, c := range blocks {
 		grid[c[0]][c[1]]--
-	}
-}
-
-func buildDurGrid() {
-
-	// create grid
-	durGrid = make([][]int, R)
-	for r := 0; r < R; r++ {
-		durGrid[r] = make([]int, C)
-	}
-
-	// fill with blocks
-	for _, c := range blocks {
 		durGrid[c[0]][c[1]]++
-	}
-}
-
-func buildBlockGrid() {
-
-	// create grid
-	blockGrid = make([][][]block, R)
-	for r := 0; r < R; r++ {
-		blockGrid[r] = make([][]block, C)
-	}
-
-	// fill with blocks
-	for _, c := range blocks {
 		blockGrid[c[0]][c[1]] = append(blockGrid[c[0]][c[1]], c)
-	}
-}
-
-func buildFirstHitGrid() {
-
-	// create grid
-	firstHitGrid = make([][]int, R)
-	for r := 0; r < R; r++ {
-		firstHitGrid[r] = make([]int, C)
-	}
-}
-
-func buildVisited() {
-
-	// create grid
-	visited = make([][]bool, R)
-	for r := 0; r < R; r++ {
-		visited[r] = make([]bool, C)
 	}
 }
 
