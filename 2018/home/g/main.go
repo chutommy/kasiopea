@@ -43,14 +43,12 @@ func main() {
 		}
 
 		// solve
-		r := solve(adj, edges)
+		r := solve()
 		fmt.Fprintln(f, r)
 	}
 }
 
-func solve(adj [][]int, edges [][3]int) int {
-
-	// TODO
+func solve() int {
 
 	return -1
 }

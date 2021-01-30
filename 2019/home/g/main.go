@@ -65,7 +65,7 @@ func solve(poets []*poet, N int) int {
 	}
 
 	q := []*poet{root}
-	var layer, inlayer, innextlayer int = 1, 1, 0
+	var layer, inlayer, innextlayer = 1, 1, 0
 	for len(q) != 0 {
 
 		p := q[0]

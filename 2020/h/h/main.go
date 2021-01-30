@@ -55,8 +55,8 @@ func main() {
 		// get N (budget, blocks)
 		var N int
 		// reset R, C
-		R, C = 0, 0
-		fmt.Scanf("%d %d %d", &R, &C, &N)
+		R, c = 0, 0
+		fmt.Scanf("%d %d %d", &R, &c, &N)
 		R++ // to add zero line
 
 		// store blocks backwards
@@ -89,8 +89,8 @@ var pq *priorityQueue
 // R rows
 var R int
 
-// C columns
-var C int
+// c columns
+var c int
 
 func solve() int {
 
@@ -127,11 +127,11 @@ func buildGrids() {
 
 	// make subgrids
 	for r := 0; r < R; r++ {
-		grid[r] = make([]int, C)
-		durGrid[r] = make([]int, C)
-		blockGrid[r] = make([][]block, C)
-		firstHitGrid[r] = make([]int, C)
-		visited[r] = make([]bool, C)
+		grid[r] = make([]int, c)
+		durGrid[r] = make([]int, c)
+		blockGrid[r] = make([][]block, c)
+		firstHitGrid[r] = make([]int, c)
+		visited[r] = make([]bool, c)
 	}
 
 	// fill with blocks
@@ -243,13 +243,13 @@ func getAdjs(r, c int) [][2]int {
 	// left
 	if c == 0 {
 		// left border
-		adj = append(adj, [2]int{r, C - 1})
+		adj = append(adj, [2]int{r, c - 1})
 	} else {
 		adj = append(adj, [2]int{r, c - 1})
 	}
 
 	// right
-	if c == C-1 {
+	if c == c-1 {
 		// right border
 		adj = append(adj, [2]int{r, 0})
 	} else {

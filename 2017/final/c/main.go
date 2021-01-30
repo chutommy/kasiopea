@@ -68,7 +68,7 @@ func solve(fRow []byte, rows [][]byte) int {
 	final := make([]int, lr)
 
 	// init first queue
-	fq := []byte{}
+	var fq []byte
 	for i := 0; i < ll; i++ {
 		lastInd := len(fq) - 1
 

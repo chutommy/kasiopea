@@ -47,13 +47,13 @@ func main() {
 		}
 
 		// solve
-		s := solve(S, V, N, srcs)
+		s := solve(S, V, srcs)
 		fmt.Fprintln(f, s)
 		fmt.Printf("%d/%d done\n", t+1, T)
 	}
 }
 
-func solve(S, V, N int, srcs []coor) int {
+func solve(S, V int, srcs []coor) int {
 
 	// create a grid
 	grid := make([][]int, V)

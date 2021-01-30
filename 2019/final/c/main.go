@@ -39,12 +39,12 @@ func main() {
 		}
 
 		// solve
-		s := solve(N, px)
+		s := solve(px)
 		fmt.Fprintln(f, s)
 	}
 }
 
-func solve(N int, px []p) int64 {
+func solve(px []p) int64 {
 
 	var total int64
 

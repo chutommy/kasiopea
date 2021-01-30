@@ -64,13 +64,13 @@ func main() {
 		}
 
 		// solve
-		u, v := solve(N, towns)
+		u, v := solve()
 		sol := fmt.Sprintf("%d %d", u, v)
 		fmt.Fprintln(f, sol)
 	}
 }
 
-func solve(N int, towns []*town) (int, int) {
+func solve() (int, int) {
 
 	// TODO
 

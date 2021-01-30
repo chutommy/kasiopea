@@ -34,12 +34,12 @@ func main() {
 		}
 
 		// solve
-		sol := solve(inp, M, N)
+		sol := solve(inp, M)
 		fmt.Fprintln(f, sol)
 	}
 }
 
-func solve(inp []int, M, N int) int {
+func solve(inp []int, M int) int {
 
 	q := inp
 

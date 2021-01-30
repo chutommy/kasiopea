@@ -53,7 +53,7 @@ func solve(bs []byte) string {
 		}
 
 		// compare
-		if 82 == byte(ltr) {
+		if 82 == ltr {
 			break
 		}
 	}

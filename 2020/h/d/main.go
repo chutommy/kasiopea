@@ -49,7 +49,7 @@ func main() {
 		}
 
 		// solve
-		s := solve(N, M, friends)
+		s := solve(N, friends)
 		if s {
 			fmt.Fprintln(f, "ANO")
 
@@ -82,7 +82,7 @@ func main() {
 var stats []int
 var visited []bool
 
-func solve(N, M int, friends [][]int) bool {
+func solve(N int, friends [][]int) bool {
 
 	// check - everybody has at least one friend
 	for n := 0; n < N; n++ {
@@ -98,13 +98,13 @@ func solve(N, M int, friends [][]int) bool {
 			continue
 		}
 
-		bfs(N, i, friends)
+		bfs(i, friends)
 	}
 
 	return true
 }
 
-func bfs(N, i int, friends [][]int) {
+func bfs(i int, friends [][]int) {
 
 	// init que
 	q := []int{i}
