@@ -1,3 +1,3 @@
-module github.com/chutified/kasiopea/2015/home/a
+module github.com/chutommy/kasiopea/2015/home/a
 
 go 1.15

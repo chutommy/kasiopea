@@ -1,3 +1,3 @@
-module github.com/chutified/kasiopea/2020/h/e
+module github.com/chutommy/kasiopea/2020/h/e
 
 go 1.15

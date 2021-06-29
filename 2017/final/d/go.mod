@@ -1,3 +1,3 @@
-module github.com/chutified/kasiopea/2017/final/d
+module github.com/chutommy/kasiopea/2017/final/d
 
 go 1.15

@@ -1,3 +1,3 @@
-module github.com/chutified/2019/final/d
+module github.com/chutommy/2019/final/d
 
 go 1.15
